@@ -7,14 +7,16 @@
 
 	const gameId = router.currentRoute.value.params.id as string;
 
-	const { players, isLoadingPlayer, currentUser, myPlayer } = useLoadPlayers(gameId);
+	const { players, isLoadingPlayer, myPlayer } = defineProps<{ players: Player[]; isLoadingPlayer: boolean; myPlayer: Player | null }>();
+
+	// const { players, isLoadingPlayer, currentUser, myPlayer } = useLoadPlayers(gameId);
 
 	const isPaying = ref(false);
 
 	const amount = ref(0);
 
 	async function paymentHandler(fromPlayer: Player, toPlayer: Player) {
-		if (myPlayer.value == null) return;
+		if (myPlayer == null) return;
 
 		isPaying.value = true;
 
@@ -23,7 +25,7 @@
 			fromPlayer.playerId,
 			toPlayer.playerId,
 			amount.value,
-			myPlayer.value.userId,
+			myPlayer.userId,
 			toPlayer.userId === "bank" ? "bankSend" : "amountTransfer",
 			`${fromPlayer.name} as send ${amount.value} Rs. to ${toPlayer.name}`,
 		);
@@ -34,20 +36,31 @@
 </script>
 
 <template>
-	<h1>Transaction</h1>
+	<h1>Transactions</h1>
 
-	<InputNumber v-model="amount" placeholder="Amount" currency="USD" locale="en-US" prefix="Rs " :min="0" />
+	<span class="p-float-label mt-3">
+		<InputNumber id="taransactionAmount" v-model="amount" placeholder="Amount" currency="USD" locale="en-US" prefix="Rs " :min="0" />
+
+		<label for="taransactionAmount">Transacton Amount</label>
+	</span>
 
 	<ProgressSpinner v-if="isLoadingPlayer"></ProgressSpinner>
 
 	<div v-else>
-		<div v-for="player in players" class="mt-3">
-			<div class="border-1" v-if="myPlayer != null && myPlayer?.userId !== player.userId">
-				<h4>User Name: {{ player.name }}</h4>
-				<h4>isBankrupt: {{ player.isBankrupt }}</h4>
-				<h4>Money: {{ player.money }}</h4>
-				<Button @click="paymentHandler(myPlayer as any, player)" label="Pay" :disabled="isPaying" :loading="isPaying" />
-			</div>
+		<div class="" v-for="(player, idx) in players" :key="player.playerId">
+			<Card class="w-full mt-3" v-if="player.userId !== myPlayer?.userId">
+				<template #title> {{ player.name }} </template>
+				<template #subtitle> is Bankrupt: {{ player.isBankrupt ? "Yes" : "No" }} </template>
+				<template #footer>
+					<Button
+						icon="pi pi-money-bill"
+						@click="paymentHandler(myPlayer as any, player)"
+						label="Pay"
+						:disabled="isPaying"
+						:loading="isPaying"
+					/>
+				</template>
+			</Card>
 		</div>
 	</div>
 </template>

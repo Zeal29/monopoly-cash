@@ -2,35 +2,38 @@
 	import { onMounted, ref } from "vue";
 	import { useLoadPlayers, payAmount } from "../../firebase/player";
 	import { router } from "../../router/router";
-	import { Player } from "../../types/index";
+	import { Game, Player } from "../../types/index";
 	import { computed } from "@vue/reactivity";
 	import { setBanker, useLoadGame } from "../../firebase/game";
-	import { getCurrentUser } from "../../utils/auth";
 
 	const gameId = router.currentRoute.value.params.id as string;
-	const { game } = useLoadGame(gameId);
 
-	const { players, isLoadingPlayer, myPlayer } = useLoadPlayers(gameId);
+	const { players, isLoadingPlayer, myPlayer, game } = defineProps<{
+		players: Player[];
+		isLoadingPlayer: boolean;
+		myPlayer: Player | null;
+		game: Game | null;
+	}>();
 
 	const isPaying = ref(false);
 
 	const amount = ref(0);
 
-	const bank = computed(() => players.value.find((player) => player.userId === "bank"));
+	const bank = computed(() => players.find((player) => player.userId === "bank"));
 
 	onMounted(() => {
 		debugger;
-		console.log(myPlayer.value?.userId, game.value?.bankerId);
+		console.log(myPlayer?.userId, game?.bankerId);
 
-		if (myPlayer.value?.userId !== game.value?.bankerId) {
+		if (myPlayer?.userId !== game?.bankerId) {
 			router.push(`/game/${gameId}/transaction`);
 		}
 	});
 
 	async function paymentHandler(fromPlayer: Player, toPlayer: Player) {
-		if (myPlayer.value == null) return;
+		if (myPlayer == null) return;
 
-		if (myPlayer.value.userId !== game.value?.bankerId) {
+		if (myPlayer.userId !== game?.bankerId) {
 			alert("You are not the banker 🤣 Trying to Hack 🖕");
 			return;
 		}
@@ -42,7 +45,7 @@
 			fromPlayer.playerId,
 			toPlayer.playerId,
 			amount.value,
-			myPlayer.value.userId,
+			myPlayer.userId,
 			"bankReceive",
 			`${fromPlayer.name} as send ${amount.value} Rs. to ${toPlayer.name}`,
 		);
@@ -52,9 +55,9 @@
 	}
 
 	async function makeBankerHandler(newBankerUserId: string) {
-		if (game.value == null) return;
+		if (game == null) return;
 
-		setBanker(game.value, newBankerUserId);
+		setBanker(game, newBankerUserId);
 
 		router.push(`/game/${gameId}/transaction`);
 	}
@@ -64,25 +67,36 @@
 	<div v-if="myPlayer?.userId === game?.bankerId">
 		<h1>Bank</h1>
 
-		<InputNumber v-model="amount" placeholder="Amount" currency="USD" locale="en-US" prefix="Rs " :min="0" />
+		<span class="p-float-label mt-3">
+			<InputNumber id="taransactionAmount" v-model="amount" placeholder="Amount" currency="USD" locale="en-US" prefix="Rs " :min="0" />
+
+			<label for="taransactionAmount">Transacton Amount</label>
+		</span>
 
 		<ProgressSpinner v-if="isLoadingPlayer"></ProgressSpinner>
 
 		<div v-else>
 			<div v-for="player in players" class="mt-3">
-				<div class="border-1 p-3" v-if="myPlayer != null && bank?.userId !== player.userId">
-					<h4>User Name: {{ player.name }}</h4>
-					<h4>isBankrupt: {{ player.isBankrupt }}</h4>
-					<h4>Money: {{ player.money }}</h4>
-					<Button @click="paymentHandler(bank as any, player)" label="Pay" :disabled="isPaying" :loading="isPaying" />
-					<Button
-						class="ml-3 p-button-secondary"
-						@click="makeBankerHandler(player.userId)"
-						label="Make Banker"
-						:disabled="isPaying"
-						:loading="isPaying"
-					/>
-				</div>
+				<Card class="w-full mt-3" v-if="myPlayer != null && bank?.userId !== player.userId">
+					<template #title> {{ player.name }} </template>
+					<template #subtitle> is Bankrupt: {{ player.isBankrupt ? "Yes" : "No" }} </template>
+					<template #footer>
+						<Button
+							icon="pi pi-money-bill"
+							@click="paymentHandler(bank as any, player)"
+							label="Pay"
+							:disabled="isPaying"
+							:loading="isPaying"
+						/>
+						<Button
+							class="ml-3 p-button-secondary"
+							@click="makeBankerHandler(player.userId)"
+							label="Make Banker"
+							:disabled="isPaying"
+							:loading="isPaying"
+						/>
+					</template>
+				</Card>
 			</div>
 		</div>
 	</div>

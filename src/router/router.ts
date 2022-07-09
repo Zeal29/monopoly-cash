@@ -18,9 +18,9 @@ export const router = createRouter({
 			component: Game,
 			name: "Game",
 			children: [
-				{ path: "/game/:id/transaction", component: Transaction, name: "Transaction" },
-				{ path: "/game/:id/log", component: Log, name: "Log" },
-				{ path: "/game/:id/bank", component: Bank, name: "Bank" },
+				// { path: "/game/:id/transaction", component: Transaction, name: "Transaction" },
+				// { path: "/game/:id/log", component: Log, name: "Log" },
+				// { path: "/game/:id/bank", component: Bank, name: "Bank" },
 			],
 		},
 	],

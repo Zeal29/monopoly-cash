@@ -1,11 +1,14 @@
 <script setup lang="ts">
+	import { Ref } from "vue";
 	import { useLoadLogs } from "../../firebase/logs";
 	import { router } from "../../router/router";
 	import { Log } from "../../types";
 	import { getCurrentUser } from "../../utils/auth";
 
-	const gameId = router.currentRoute.value.params.id as string;
-	const { isLoadingLogs, logs } = useLoadLogs(gameId);
+	const { isLoadingLogs, logs } = defineProps<{ isLoadingLogs: boolean; logs: Log[] }>();
+
+	// const gameId = router.currentRoute.value.params.id as string;
+	// const { isLoadingLogs, logs } = useLoadLogs(gameId);
 
 	const currentUser = getCurrentUser();
 
