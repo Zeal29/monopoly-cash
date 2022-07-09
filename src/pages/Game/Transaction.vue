@@ -7,7 +7,7 @@
 
 	const gameId = router.currentRoute.value.params.id as string;
 
-	const { players, isLoadingPlayer, myPlayer } = defineProps<{ players: Player[]; isLoadingPlayer: boolean; myPlayer: Player | null }>();
+	const { players, isLoadingPlayer, myPlayer } = defineProps<{ players: Player[]; isLoadingPlayer: boolean; myPlayer: Player }>();
 
 	// const { players, isLoadingPlayer, currentUser, myPlayer } = useLoadPlayers(gameId);
 
@@ -37,7 +37,6 @@
 
 <template>
 	<h1>Transactions</h1>
-
 	<span class="p-float-label mt-3">
 		<InputNumber id="taransactionAmount" v-model="amount" placeholder="Amount" currency="USD" locale="en-US" prefix="Rs " :min="0" />
 

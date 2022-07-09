@@ -17,14 +17,7 @@
 
 	const gameId = router.currentRoute.value.params.id as string;
 
-	const {
-		players,
-
-		isLoadingPlayer,
-
-		currentUser,
-		myPlayer,
-	} = useLoadPlayers(gameId);
+	const { players, isLoadingPlayer, currentUser, myPlayer } = useLoadPlayers(gameId);
 
 	// const isLoadingGame = true;
 	// const isLoadingPlayer = true;
@@ -90,7 +83,7 @@
 			</div>
 
 			<TabView scrollable class="mt-3" style="max-width: calc(100vw - 3rem)">
-				<TabPanel header="Transactions">
+				<TabPanel header="Transactions" v-if="myPlayer != null">
 					<Transaction :players="players" :isLoadingPlayer="isLoadingPlayer" :myPlayer="myPlayer" />
 				</TabPanel>
 				<TabPanel header="Logs">
