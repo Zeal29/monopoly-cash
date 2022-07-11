@@ -18,7 +18,14 @@
 	onMounted(() => {});
 
 	async function createGameHandler() {
-		const game = await createGame(gameName.value);
+		if (gameName.value.trim() === "") {
+			alert("Please enter a game name");
+			return;
+		}
+		const value = gameName.value.trim();
+		gameName.value = "";
+
+		const game = await createGame(value);
 		console.log("game", game);
 	}
 
@@ -45,7 +52,7 @@
 				<form v-on:submit.prevent="createGameHandler" class="col">
 					<div class="p-inputgroup">
 						<InputText placeholder="New Game Name" v-model="gameName" />
-						<Button icon="pi pi-plus" type="submit" label="Create" />
+						<Button :disabled="gameName.trim() == ''" icon="pi pi-plus" type="submit" label="Create" />
 					</div>
 				</form>
 			</div>

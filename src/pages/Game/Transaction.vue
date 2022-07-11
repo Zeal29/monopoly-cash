@@ -16,7 +16,7 @@
 	const amount = ref(0);
 
 	async function paymentHandler(fromPlayer: Player, toPlayer: Player) {
-		if (myPlayer == null) return;
+		if (myPlayer == null || amount.value <= 0 || isNaN(amount.value)) return;
 
 		isPaying.value = true;
 
@@ -54,8 +54,8 @@
 					<Button
 						icon="pi pi-money-bill"
 						@click="paymentHandler(myPlayer as any, player)"
-						label="Pay"
-						:disabled="isPaying"
+						:label="`Pay ${amount} Rs`"
+						:disabled="isPaying || amount <= 0 || player.isBankrupt"
 						:loading="isPaying"
 					/>
 				</template>

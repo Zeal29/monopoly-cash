@@ -6,13 +6,16 @@ const gamesCollection = collection(DB, "games");
 
 const getLogsCollection = (gameId: string) => collection(gamesCollection, gameId, "logs");
 
-export function useLoadLogs(gameId: string) {
+export function useLoadLogs(gameId: string, onLogs?: (logs: Log[]) => void) {
 	const logs = ref<Log[]>([]);
 	const isLoadingLogs = ref(true);
 
 	const close = onSnapshot(getLogsCollection(gameId), (snapshot) => {
 		logs.value = snapshot.docs.map((d) => d.data() as Log).sort((a, b) => (b?.createdAt as any)?.seconds - (a?.createdAt as any)?.seconds);
 		isLoadingLogs.value = false;
+
+		console.log("snapshot", snapshot);
+		onLogs?.(logs.value);
 	});
 
 	onUnmounted(close);

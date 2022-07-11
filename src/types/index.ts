@@ -29,3 +29,11 @@ export type Game = {
 	color: string;
 	bankerId: string | null;
 };
+
+export type Roll = {
+	rollId: string;
+	value: number;
+	userId: string;
+	username: string;
+	createdAt: Date;
+};

@@ -1,6 +1,16 @@
 <script setup lang="ts">
 	import { ref } from "vue";
+	import { createRoll, useLoadRolls } from "../firebase/dice";
+	import { router } from "../router/router";
 	import { randomMinMax, sleep } from "../utils/index";
+	import { getCurrentUser } from "../utils/auth";
+	import { Roll } from "../types/index";
+
+	const gameId = router.currentRoute.value.params.id as string;
+
+	const { isLoadingRolls, rolls } = defineProps<{ isLoadingRolls: boolean; rolls: Roll[] }>();
+
+	// const { isLoadingRolls, rolls } = useLoadRolls(gameId);
 
 	const dice = ref("?");
 	const isDiceRolling = ref(false);
@@ -12,7 +22,10 @@
 	const ultimetChange = ref(0.005);
 	const isSettingOpen = ref(false);
 
+	const DiseCooldownComplete = ref(0);
+
 	const rollDice = async () => {
+		if (isDiceRolling.value || DiseCooldownComplete.value != 0) return;
 		diceColor.value = "white";
 
 		isDiceRolling.value = true;
@@ -66,6 +79,23 @@
 
 			isDiceRolling.value = false;
 		}
+
+		const currentUser = getCurrentUser();
+
+		if (currentUser == null) {
+			alert("You are not logged in");
+			return;
+		}
+
+		createRoll(gameId, currentUser.username, currentUser.userId, Number(dice.value));
+
+		DiseCooldownComplete.value = 6;
+
+		while (DiseCooldownComplete.value > 0) {
+			DiseCooldownComplete.value--;
+			await sleep(1000);
+		}
+		DiseCooldownComplete.value = 0;
 	};
 
 	function generateNumber() {
@@ -106,34 +136,61 @@
 			</div>
 		</div>
 	</div>
+	<p v-if="DiseCooldownComplete > 0">Cooldown in {{ DiseCooldownComplete }} seconds</p>
 
-	<Button @click="isSettingOpen = !isSettingOpen" label="settings"></Button>
+	<div class="">
+		<h2>Previous rolls</h2>
+		<div v-if="!isLoadingRolls">
+			<Card v-for="(roll, index) in rolls" :key="roll.rollId" class="mt-3">
+				<template #header>
+					<div class="p-2">#{{ index + 1 }}</div>
+				</template>
+				<template #title>
+					{{ roll.username }}
+				</template>
+				<template #content>
+					<div class="">
+						<div class="">Roll: {{ roll.value }}</div>
+						<div class="mt-2">Time: {{ ((roll.createdAt as any).toDate() as Date).toLocaleString()  }}</div>
+					</div>
+				</template>
+			</Card>
+		</div>
+		<div class="flex justify-content-center" v-else>
+			<ProgressSpinner />
+		</div>
+	</div>
 
-	<div v-if="isSettingOpen" class="my-4">
-		<div class="p-fluid grid">
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<InputNumber id="maxNegative" v-model="maxNigative" />
-					<label for="maxNegative">Max Negative</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<InputNumber id="negativeChance" v-model="nigativeChange" />
-					<label for="negativeChance">Negative Chance</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<InputNumber id="goldChange" v-model="goldChange" />
-					<label for="goldChange">Gold Chance</label>
-				</span>
-			</div>
-			<div class="field col-12 md:col-4">
-				<span class="p-float-label">
-					<InputNumber id="ultimetChange" v-model="ultimetChange" />
-					<label for="ultimetChange">Ultimet Change</label>
-				</span>
+	<Divider class="my-5" />
+	<Button @click="isSettingOpen = !isSettingOpen" label="Settings" class="p-button-text"></Button>
+
+	<div class="my-4">
+		<div v-if="isSettingOpen">
+			<div class="p-fluid grid">
+				<div class="field col-12 md:col-4">
+					<span class="p-float-label">
+						<InputNumber id="maxNegative" v-model="maxNigative" />
+						<label for="maxNegative">Max Negative</label>
+					</span>
+				</div>
+				<div class="field col-12 md:col-4">
+					<span class="p-float-label">
+						<InputNumber id="negativeChance" v-model="nigativeChange" />
+						<label for="negativeChance">Negative Chance</label>
+					</span>
+				</div>
+				<div class="field col-12 md:col-4">
+					<span class="p-float-label">
+						<InputNumber id="goldChange" v-model="goldChange" />
+						<label for="goldChange">Gold Chance</label>
+					</span>
+				</div>
+				<div class="field col-12 md:col-4">
+					<span class="p-float-label">
+						<InputNumber id="ultimetChange" v-model="ultimetChange" />
+						<label for="ultimetChange">Ultimet Change</label>
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>

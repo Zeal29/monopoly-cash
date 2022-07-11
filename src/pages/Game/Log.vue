@@ -7,9 +7,6 @@
 
 	const { isLoadingLogs, logs } = defineProps<{ isLoadingLogs: boolean; logs: Log[] }>();
 
-	// const gameId = router.currentRoute.value.params.id as string;
-	// const { isLoadingLogs, logs } = useLoadLogs(gameId);
-
 	const currentUser = getCurrentUser();
 
 	function getLogColor(log: Log) {

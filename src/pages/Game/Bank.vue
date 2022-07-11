@@ -31,7 +31,7 @@
 	});
 
 	async function paymentHandler(fromPlayer: Player, toPlayer: Player) {
-		if (myPlayer == null) return;
+		if (myPlayer == null || amount.value <= 0) return;
 
 		if (myPlayer.userId !== game?.bankerId) {
 			alert("You are not the banker 🤣 Trying to Hack 🖕");
@@ -81,20 +81,24 @@
 					<template #title> {{ player.name }} </template>
 					<template #subtitle> is Bankrupt: {{ player.isBankrupt ? "Yes" : "No" }} </template>
 					<template #footer>
-						<Button
-							icon="pi pi-money-bill"
-							@click="paymentHandler(bank as any, player)"
-							label="Pay"
-							:disabled="isPaying"
-							:loading="isPaying"
-						/>
-						<Button
-							class="ml-3 p-button-secondary"
-							@click="makeBankerHandler(player.userId)"
-							label="Make Banker"
-							:disabled="isPaying"
-							:loading="isPaying"
-						/>
+						<div class="flex flex-column">
+							<Button
+								block
+								icon="pi pi-money-bill"
+								@click="paymentHandler(bank as any, player)"
+								:label="`Pay ${amount} Rs. from Bank`"
+								:disabled="isPaying || amount <= 0"
+								:loading="isPaying"
+							/>
+							<Button
+								block
+								class="p-button-secondary p-button-outlined mt-2"
+								@click="makeBankerHandler(player.userId)"
+								label="Make Banker"
+								:disabled="isPaying"
+								:loading="isPaying"
+							/>
+						</div>
 					</template>
 				</Card>
 			</div>

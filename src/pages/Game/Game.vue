@@ -12,22 +12,43 @@
 	import { useLoadLogs } from "../../firebase/logs";
 	import Transaction from "./Transaction.vue";
 	import Bank from "./Bank.vue";
+	import { useToast } from "primevue/usetoast";
+	import { useLoadRolls } from "../../firebase/dice";
 
 	const vueRouter = ref(router);
+	const toast = useToast();
 
 	const gameId = router.currentRoute.value.params.id as string;
 
 	const { players, isLoadingPlayer, currentUser, myPlayer } = useLoadPlayers(gameId);
+	const { isLoadingRolls, rolls } = useLoadRolls(gameId, (rolls) => {
+		const first = rolls[0];
 
-	// const isLoadingGame = true;
-	// const isLoadingPlayer = true;
+		if (currentUser.value?.userId === first.userId) {
+			return;
+		}
+
+		toast.add({
+			severity: "info",
+			summary: `${first.username} rolled ${first.value}`,
+			life: 3000,
+		});
+	});
 
 	const {
 		game,
 
 		isLoadingGame,
 	} = useLoadGame(gameId);
-	const { isLoadingLogs, logs } = useLoadLogs(gameId);
+	const { isLoadingLogs, logs } = useLoadLogs(gameId, (logs) => {
+		const first = logs[0];
+		toast.add({
+			severity: currentUser.value?.userId === first.toUserId ? "success" : "info",
+			summary: "New Log",
+			detail: first.message,
+			life: 3000,
+		});
+	});
 
 	const isMoneyHidden = ref(true);
 
@@ -83,6 +104,9 @@
 			</div>
 
 			<TabView scrollable class="mt-3" style="max-width: calc(100vw - 3rem)">
+				<TabPanel header="Dice">
+					<Dice :isLoadingRolls="isLoadingRolls" :rolls="rolls" />
+				</TabPanel>
 				<TabPanel header="Transactions" v-if="myPlayer != null">
 					<Transaction :players="players" :isLoadingPlayer="isLoadingPlayer" :myPlayer="myPlayer" />
 				</TabPanel>
@@ -92,9 +116,7 @@
 				<TabPanel header="Bank" v-if="myPlayer?.userId === game?.bankerId">
 					<Bank :players="players" :isLoadingPlayer="isLoadingPlayer" :myPlayer="myPlayer" :game="game" />
 				</TabPanel>
-				<TabPanel header="Dice">
-					<Dice />
-				</TabPanel>
+				<TabPanel header="  " :disabled="true"> </TabPanel>
 			</TabView>
 		</div>
 	</div>
