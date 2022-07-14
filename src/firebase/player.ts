@@ -59,7 +59,7 @@ export async function payAmount(
 	logType: Log["logType"],
 	message: string,
 ) {
-	debugger;
+
 	const fromPlayerDoc = doc(getPlayerCollection(gameId), fromPlayerId);
 	const toPlayerDoc = doc(getPlayerCollection(gameId), toPlayerId);
 

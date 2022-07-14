@@ -22,7 +22,6 @@
 	const bank = computed(() => players.find((player) => player.userId === "bank"));
 
 	onMounted(() => {
-		debugger;
 		console.log(myPlayer?.userId, game?.bankerId);
 
 		if (myPlayer?.userId !== game?.bankerId) {
@@ -57,9 +56,12 @@
 	async function makeBankerHandler(newBankerUserId: string) {
 		if (game == null) return;
 
-		setBanker(game, newBankerUserId);
+		const res = prompt("Are you sure you want to make this player the banker? (y/n)");
 
-		router.push(`/game/${gameId}/transaction`);
+		if (res === "y" || res === "Y") {
+			setBanker(game, newBankerUserId);
+			router.push(`/game/${gameId}`);
+		}
 	}
 </script>
 
