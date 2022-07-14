@@ -23,7 +23,14 @@ export function useLoadLogs(gameId: string, onLogs?: (logs: Log[]) => void) {
 	return { logs, isLoadingLogs };
 }
 
-export async function createLog(gameId: string, userId: string, logType: Log["logType"], message: string, toUserId?: string) {
+export async function createLog(
+	gameId: string,
+	userId: string,
+	logType: Log["logType"],
+	message: string,
+	toUserId?: string,
+	value: number | null = null,
+) {
 	const docRef = doc(getLogsCollection(gameId));
 
 	const log: Log = {
@@ -33,6 +40,7 @@ export async function createLog(gameId: string, userId: string, logType: Log["lo
 		logType,
 		message,
 		toUserId,
+		value,
 	};
 	await setDoc(docRef, log);
 }

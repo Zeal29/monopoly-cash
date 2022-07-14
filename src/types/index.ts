@@ -9,9 +9,10 @@ export type Log = {
 	logId: string;
 	userId: string;
 	createdAt: Date;
-	logType: "amountTransfer" | "bankruptcy" | "bankReceive" | "bankSend";
+	logType: "amountTransfer" | "bankruptcy" | "bankReceive" | "bankSend" | "accuracyPointsUsed" | "accuracyPointsGained";
 	message: string;
 	toUserId: string | undefined | null;
+	value?: number | null;
 };
 
 export type Player = {
@@ -20,6 +21,9 @@ export type Player = {
 	name: string;
 	money: number;
 	isBankrupt: boolean;
+	isDisabled: boolean;
+	playOrder: number;
+	accuracyPoints: number;
 };
 
 export type Game = {
@@ -28,6 +32,8 @@ export type Game = {
 	createdAt: Date;
 	color: string;
 	bankerId: string | null;
+	currentPlayerId: string | null;
+	lockGame: boolean;
 };
 
 export type Roll = {

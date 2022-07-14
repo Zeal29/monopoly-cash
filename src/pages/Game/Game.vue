@@ -13,7 +13,8 @@
 	import Transaction from "./Transaction.vue";
 	import Bank from "./Bank.vue";
 	import { useToast } from "primevue/usetoast";
-	import { useLoadRolls } from "../../firebase/dice";
+	import { setCurrentUserTurn, useLoadRolls } from "../../firebase/dice";
+	import Settings from "../../components/Settings.vue";
 
 	const vueRouter = ref(router);
 	const toast = useToast();
@@ -23,6 +24,8 @@
 	const { players, isLoadingPlayer, currentUser, myPlayer } = useLoadPlayers(gameId);
 	const { isLoadingRolls, rolls } = useLoadRolls(gameId, (rolls) => {
 		const first = rolls[0];
+
+		if (first == null) return;
 
 		if (currentUser.value?.userId === first.userId) {
 			return;
@@ -42,6 +45,9 @@
 	} = useLoadGame(gameId);
 	const { isLoadingLogs, logs } = useLoadLogs(gameId, (logs) => {
 		const first = logs[0];
+
+		if (first == null) return;
+
 		toast.add({
 			severity: currentUser.value?.userId === first.toUserId ? "success" : "info",
 			summary: "New Log",
@@ -49,6 +55,8 @@
 			life: 3000,
 		});
 	});
+
+	const playerWithTurn = computed(() => players.value.find((p) => p.userId === game.value?.currentPlayerId) ?? null);
 
 	const isMoneyHidden = ref(true);
 
@@ -60,16 +68,18 @@
 			return;
 		}
 
-		const player = await checkIfPlayerExistByUserId(gameId, currentUser.value.userId);
+		const { currentPlayer: player } = await checkIfPlayerExistByUserId(gameId, currentUser.value.userId);
 
 		if (player != null) return;
 
-		await createPlayer(gameId, currentUser.value.username, currentUser.value.userId);
+		debugger;
+		await createPlayer(gameId, currentUser.value.username, currentUser.value.userId, players.value.length, 1500);
 	});
 
 	watch(game, async (newGame) => {
 		if (newGame?.bankerId == null && currentUser.value != null) {
 			await setBanker(newGame as Game, currentUser.value.userId);
+			await setCurrentUserTurn(gameId, currentUser.value.userId);
 		}
 	});
 
@@ -96,6 +106,8 @@
 						<p>is Bankrupt: {{ myPlayer?.isBankrupt }}</p>
 						<p @click="isMoneyHidden = !isMoneyHidden">Money: {{ !isMoneyHidden ? myPlayer?.money : "******" }}</p>
 						<p>Banker Name: {{ bankerName }}</p>
+						<p>Current Turn: {{ playerWithTurn?.name }}</p>
+						<p>My Turn Index: {{ myPlayer?.playOrder }}</p>
 					</div>
 				</template>
 			</Card>
@@ -104,8 +116,15 @@
 			</div>
 
 			<TabView scrollable class="mt-3" style="max-width: calc(100vw - 3rem)">
-				<TabPanel header="Dice">
-					<Dice :isLoadingRolls="isLoadingRolls" :rolls="rolls" />
+				<TabPanel header="Dice" v-if="playerWithTurn != null">
+					<Dice
+						:myPlayer="myPlayer"
+						:currentTurnPlayer="playerWithTurn"
+						:players="players"
+						:isMyTurn="playerWithTurn?.userId === myPlayer?.userId"
+						:isLoadingRolls="isLoadingRolls"
+						:rolls="rolls"
+					/>
 				</TabPanel>
 				<TabPanel header="Transactions" v-if="myPlayer != null">
 					<Transaction :players="players" :isLoadingPlayer="isLoadingPlayer" :myPlayer="myPlayer" />
@@ -115,6 +134,9 @@
 				</TabPanel>
 				<TabPanel header="Bank" v-if="myPlayer?.userId === game?.bankerId">
 					<Bank :players="players" :isLoadingPlayer="isLoadingPlayer" :myPlayer="myPlayer" :game="game" />
+				</TabPanel>
+				<TabPanel header="Settings" v-if="myPlayer?.userId === game?.bankerId">
+					<Settings :players="players" :isLoadingPlayer="isLoadingPlayer" :myPlayer="myPlayer" />
 				</TabPanel>
 				<TabPanel header="  " :disabled="true"> </TabPanel>
 			</TabView>

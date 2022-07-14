@@ -27,7 +27,7 @@
 			amount.value,
 			myPlayer.userId,
 			toPlayer.userId === "bank" ? "bankSend" : "amountTransfer",
-			`${fromPlayer.name} as send ${amount.value} Rs. to ${toPlayer.name}`,
+			`${fromPlayer.name} sent ${amount.value} Rs. to ${toPlayer.name}`,
 		);
 
 		isPaying.value = false;

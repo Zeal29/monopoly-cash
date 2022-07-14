@@ -1,14 +1,24 @@
 <script setup lang="ts">
 	import { ref } from "vue";
-	import { createRoll, useLoadRolls } from "../firebase/dice";
+	import { createRoll, setCurrentUserTurn, useLoadRolls } from "../firebase/dice";
 	import { router } from "../router/router";
 	import { randomMinMax, sleep } from "../utils/index";
 	import { getCurrentUser } from "../utils/auth";
-	import { Roll } from "../types/index";
+	import { Player, Roll } from "../types/index";
+	import Slider from "primevue/slider";
+	import { debug } from "console";
+	import { acquireAccuracyPoints, spendAccuracyPoints } from "../firebase/player";
 
 	const gameId = router.currentRoute.value.params.id as string;
 
-	const { isLoadingRolls, rolls } = defineProps<{ isLoadingRolls: boolean; rolls: Roll[] }>();
+	const props = defineProps<{
+		isLoadingRolls: boolean;
+		rolls: Roll[];
+		isMyTurn: boolean;
+		currentTurnPlayer: Player;
+		players: Player[];
+		myPlayer: Player | null;
+	}>();
 
 	// const { isLoadingRolls, rolls } = useLoadRolls(gameId);
 
@@ -24,8 +34,13 @@
 
 	const DiseCooldownComplete = ref(0);
 
+	const accuracyRollNumber = ref<number>(1);
+
+	const accuracyPoints = ref(0);
+
 	const rollDice = async () => {
-		if (isDiceRolling.value || DiseCooldownComplete.value != 0) return;
+		if (!props.isMyTurn) return;
+		if (isDiceRolling.value || DiseCooldownComplete.value != 0 || props.myPlayer == null) return;
 		diceColor.value = "white";
 
 		isDiceRolling.value = true;
@@ -39,8 +54,9 @@
 		isDiceRolling.value = false;
 
 		if (dice.value === "☄️") {
-			isDiceRolling.value = true;
 			diceColor.value = "red";
+			isDiceRolling.value = true;
+
 			await sleep(5000);
 
 			for (let i = 0; i < randomMinMax(10, 40); i++) {
@@ -52,10 +68,24 @@
 			isDiceRolling.value = false;
 		}
 
-		if (dice.value === "🌟") {
+		if (dice.value === "🎯") {
+			diceColor.value = "#f12f63";
 			isDiceRolling.value = true;
+
+			spendAccuracyPoints(gameId, props.myPlayer?.playerId, accuracyPoints.value);
+			await sleep(3000);
+
+			isDiceRolling.value = false;
+
+			dice.value = accuracyRollNumber.value.toString();
+		} else {
+			acquireAccuracyPoints(gameId, props.myPlayer?.playerId, 10);
+		}
+
+		if (dice.value === "🌟") {
 			diceColor.value = "gold";
 			await sleep(3000);
+			isDiceRolling.value = true;
 
 			for (let i = 0; i < randomMinMax(10, 40); i++) {
 				dice.value = calculateGoldenChance();
@@ -67,8 +97,9 @@
 		}
 
 		if (dice.value == "☠️") {
-			isDiceRolling.value = true;
 			diceColor.value = "#6200ff";
+			isDiceRolling.value = true;
+
 			await sleep(3000);
 
 			for (let i = 0; i < randomMinMax(10, 40); i++) {
@@ -91,6 +122,8 @@
 
 		DiseCooldownComplete.value = 6;
 
+		nextUserTurn();
+
 		while (DiseCooldownComplete.value > 0) {
 			DiseCooldownComplete.value--;
 			await sleep(1000);
@@ -99,17 +132,32 @@
 	};
 
 	function generateNumber() {
-		const diceChange = Math.random();
+		let accuracyDiceChange = Math.random();
 
-		if (diceChange <= ultimetChange.value) {
+		debugger;
+		let accuracyChance = accuracyPoints.value / 100;
+
+		if (accuracyDiceChange <= accuracyChance) {
+			return "🎯";
+		}
+
+		let diceChange = Math.random();
+
+		let chance = ultimetChange.value;
+
+		if (diceChange <= chance) {
 			return "☄️";
 		}
 
-		if (diceChange <= goldChange.value) {
+		chance += goldChange.value;
+
+		if (diceChange <= chance) {
 			return "🌟";
 		}
 
-		if (diceChange < nigativeChange.value) {
+		chance += nigativeChange.value;
+
+		if (diceChange <= chance) {
 			return "☠️";
 		}
 
@@ -119,16 +167,47 @@
 	function calculateGoldenChance() {
 		return randomMinMax(13, 24).toString();
 	}
+
+	async function nextUserTurn() {
+		debugger;
+		if (props.currentTurnPlayer == null) return;
+
+		const playerList = props.players.filter((p) => p.userId !== "bank");
+
+		let nextPlayerIdx =
+			playerList.sort((a, b) => a.playOrder - b.playOrder).findIndex((player) => player.userId === props.currentTurnPlayer.userId) + 1;
+
+		if (nextPlayerIdx >= playerList.length) {
+			nextPlayerIdx = 0;
+		}
+
+		await setCurrentUserTurn(gameId, playerList[nextPlayerIdx].userId);
+	}
 </script>
 
 <template>
 	<h1>Dice</h1>
+
+	<div class="">
+		<div class="">
+			<h2>Total Accuracy Points : {{ props.myPlayer?.accuracyPoints ?? "?" }}</h2>
+		</div>
+		<div class="">
+			<h4>Roll Value : {{ accuracyRollNumber }}</h4>
+			<Slider v-model="accuracyRollNumber" :step="1" :min="1" :max="10" />
+		</div>
+		<div class="">
+			<h4>Accuracy Points : {{ accuracyPoints }}</h4>
+			<Slider v-model="accuracyPoints" :step="5" :min="0" :max="props.myPlayer?.accuracyPoints ?? 0" />
+		</div>
+	</div>
 
 	<div class="flex justify-content-center h-20rem flex align-items-center">
 		<div class="flex align-items-center flex-column">
 			<div
 				@click="rollDice"
 				:style="`color: ${diceColor}; border-color: ${diceColor}`"
+				:class="{ diceDisabled: !isMyTurn }"
 				class="dice relative h-12rem w-12rem flex justify-content-center align-items-center diceFont"
 			>
 				<ProgressSpinner v-if="isDiceRolling" class="h-12rem w-12rem absolute"> </ProgressSpinner>
@@ -137,6 +216,7 @@
 		</div>
 	</div>
 	<p v-if="DiseCooldownComplete > 0">Cooldown in {{ DiseCooldownComplete }} seconds</p>
+	<p v-if="!isMyTurn">This is Not You turn yet</p>
 
 	<div class="">
 		<h2>Previous rolls</h2>
@@ -204,5 +284,9 @@
 	.dice {
 		border: 5px solid white;
 		border-radius: 29px;
+	}
+
+	.diceDisabled {
+		opacity: 0.6;
 	}
 </style>

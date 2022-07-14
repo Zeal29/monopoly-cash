@@ -38,3 +38,15 @@ export function useLoadRolls(gameId: string, onRoll?: (logs: Roll[]) => void) {
 
 	return { rolls, isLoadingRolls };
 }
+
+export async function setCurrentUserTurn(gameId: string, userId: string) {
+	const gameDocRef = doc(gamesCollection, gameId);
+	const currentGame = await getDoc(gameDocRef);
+
+	const game: Game = {
+		...(currentGame.data() as Game),
+		currentPlayerId: userId,
+	};
+
+	await setDoc(gameDocRef, game);
+}

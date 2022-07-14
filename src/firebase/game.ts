@@ -15,10 +15,12 @@ export async function createGame(name: string) {
 		createdAt: new Date(),
 		gameId: docRef.id,
 		bankerId: null,
+		currentPlayerId: null,
+		lockGame: false,
 	};
 	await setDoc(docRef, user);
 
-	await createPlayer(docRef.id, "Bank", "bank");
+	await createPlayer(docRef.id, "Bank", "bank", -1, 100_000_000);
 }
 
 export async function setBanker(game: Game, userId: string) {
@@ -32,9 +34,9 @@ export async function setBanker(game: Game, userId: string) {
 }
 
 export async function getGames() {
-	const doc = await getDocs(gamesCollection);
+	const docs = await getDocs(gamesCollection);
 
-	return doc?.docs.map((d) => d.data() as Game);
+	return docs?.docs.map((d) => d.data() as Game);
 }
 
 export function useLoadGames() {
