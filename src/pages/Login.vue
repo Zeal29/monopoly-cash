@@ -51,14 +51,14 @@
 </script>
 
 <template>
-	<div class="grid grid-nogutter border-1 container">
-		<div class="justify-content-center col md:col-6 md:col-offset-3 mx-3 mt-6">
+	<div class="grid grid-nogutter container px-3">
+		<div class="justify-content-center col md:col-4 md:col-offset-4 mt-6">
 			<Card class="w-full">
 				<template #title> Auth </template>
 				<template #content>
 					<div>
-						<div class="grid p-fluid">
-							<div class="col-12 md:col-4">
+						<div class="flex flex-column gap-3">
+							<div class="">
 								<div class="p-inputgroup">
 									<span class="p-inputgroup-addon">
 										<i class="pi pi-user"></i>
@@ -67,7 +67,7 @@
 								</div>
 							</div>
 
-							<div class="col-12 md:col-4">
+							<div class="">
 								<div class="p-inputgroup">
 									<span class="p-inputgroup-addon">
 										<i class="pi pi-lock"></i>

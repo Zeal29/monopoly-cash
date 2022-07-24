@@ -1,26 +1,4 @@
-<script setup lang="ts">
-	// This starter template is using Vue 3 <script setup> SFCs
-	// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-	import { ref } from "vue";
-	import HelloWorld from "./components/HelloWorld.vue";
-
-	// import Dialog from "primevue/dialog";
-	import { createUser, findUser } from "./firebase/users";
-	const isVisible = ref(true);
-
-	async function createU() {
-		const res = await createUser("Hammad", "Ghafoor");
-
-		console.log("res", res);
-		con
-	}
-
-	async function findUserHandler() {
-		const res = await findUser("Hammad", "Ghafoor1");
-
-		console.log("findUserHandler res", res,ds);
-	}
-</script>
+<script setup lang="ts"></script>
 
 <template>
 	<Toast />
