@@ -20,7 +20,7 @@ export async function createPlayer(gameId: string, name: string, userId: string,
 		playOrder,
 		name,
 		userId,
-		accuracyPoints: 100,
+		accuracyPoints: 50,
 	};
 
 	await setDoc(playerDoc, player);

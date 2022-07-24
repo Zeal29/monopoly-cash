@@ -12,12 +12,13 @@
 		const res = await createUser("Hammad", "Ghafoor");
 
 		console.log("res", res);
+		con
 	}
 
 	async function findUserHandler() {
 		const res = await findUser("Hammad", "Ghafoor1");
 
-		console.log("findUserHandler res", res);
+		console.log("findUserHandler res", res,ds);
 	}
 </script>
 

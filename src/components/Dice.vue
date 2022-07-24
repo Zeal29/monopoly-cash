@@ -68,20 +68,6 @@
 			isDiceRolling.value = false;
 		}
 
-		if (dice.value === "🎯") {
-			diceColor.value = "#f12f63";
-			isDiceRolling.value = true;
-
-			spendAccuracyPoints(gameId, props.myPlayer?.playerId, accuracyPoints.value);
-			await sleep(3000);
-
-			isDiceRolling.value = false;
-
-			dice.value = accuracyRollNumber.value.toString();
-		} else {
-			acquireAccuracyPoints(gameId, props.myPlayer?.playerId, 10);
-		}
-
 		if (dice.value === "🌟") {
 			diceColor.value = "gold";
 			await sleep(3000);
@@ -109,6 +95,20 @@
 			}
 
 			isDiceRolling.value = false;
+		}
+
+		if (dice.value === "🎯") {
+			diceColor.value = "#f12f63";
+			isDiceRolling.value = true;
+
+			spendAccuracyPoints(gameId, props.myPlayer?.playerId, accuracyPoints.value);
+			await sleep(3000);
+
+			isDiceRolling.value = false;
+
+			dice.value = accuracyRollNumber.value.toString();
+		} else {
+			acquireAccuracyPoints(gameId, props.myPlayer?.playerId, 5);
 		}
 
 		const currentUser = getCurrentUser();
